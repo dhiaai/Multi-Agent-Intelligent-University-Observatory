@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent University Observatory</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <div class="logo"><i class="fa-solid fa-atom"></i></div>
+                <h2>Observatory</h2>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-tab="dashboard">
+                    <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="clusters">
+                    <i class="fa-solid fa-diagram-project"></i><span>Clusters</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="recommendations">
+                    <i class="fa-solid fa-user-check"></i><span>Recommendations</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="students">
+                    <i class="fa-solid fa-user-graduate"></i><span>Students</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="discover">
+                    <i class="fa-solid fa-fire"></i><span>Discover</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="career">
+                    <i class="fa-solid fa-briefcase"></i><span>Career Tools</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button id="btn-open-pipeline" class="btn-primary">
+                    <i class="fa-solid fa-play"></i> Run MAS Pipeline
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <header class="topbar">
+                <div class="page-title"><h1 id="current-page-title">Dashboard Overview</h1></div>
+                <div class="user-selector glass-panel">
+                    <label for="user-select"><i class="fa-solid fa-user"></i> Viewing As:</label>
+                    <select id="user-select"><option value="">Loading users...</option></select>
+                </div>
+            </header>
+
+            <div class="views-container">
+                <!-- Dashboard View -->
+                <section id="view-dashboard" class="view active">
+                    <div class="metrics-grid">
+                        <div class="metric-card glass-panel">
+                            <div class="metric-icon cyan"><i class="fa-solid fa-briefcase"></i></div>
+                            <div class="metric-info"><h3>Total Opportunities</h3><p id="metric-opps" class="metric-value">--</p></div>
+                        </div>
+                        <div class="metric-card glass-panel">
+                            <div class="metric-icon purple"><i class="fa-solid fa-users"></i></div>
+                            <div class="metric-info"><h3>Registered Users</h3><p id="metric-users" class="metric-value">--</p></div>
+                        </div>
+                        <div class="metric-card glass-panel">
+                            <div class="metric-icon pink"><i class="fa-solid fa-layer-group"></i></div>
+                            <div class="metric-info"><h3>Data Clusters</h3><p id="metric-clusters" class="metric-value">--</p></div>
+                        </div>
+                    </div>
+                    <div class="charts-grid">
+                        <div class="chart-card glass-panel">
+                            <h3>Opportunity Types</h3><div class="chart-container"><canvas id="chart-types"></canvas></div>
+                        </div>
+                        <div class="chart-card glass-panel">
+                            <h3>Largest Clusters</h3><div class="chart-container"><canvas id="chart-clusters"></canvas></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Clusters View -->
+                <section id="view-clusters" class="view">
+                    <div class="glass-panel full-height p-24">
+                        <h3>Opportunity Knowledge Graph</h3>
+                        <p class="text-muted mb-10">Click on an opportunity node to open its link.</p>
+                        <div id="clusters-graph-container" style="width: 100%; height: calc(100vh - 220px); border-radius: 10px; overflow: hidden; background: rgba(0,0,0,0.2);">
+                            <div class="loading-spinner"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading Graph...</div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Recommendations View -->
+                <section id="view-recommendations" class="view">
+                    <div class="rec-layout">
+                        <div class="rec-main glass-panel">
+                            <div class="rec-header">
+                                <h3><i class="fa-solid fa-star"></i> Top Matches for You</h3>
+                                <div id="user-skills-badge" class="skills-badge"></div>
+                            </div>
+                            <div class="recommendations-list" id="recs-list-container">
+                                <p class="text-muted">Select a user to view recommendations.</p>
+                            </div>
+                        </div>
+                        <div class="rec-sidebar glass-panel">
+                            <h3><i class="fa-solid fa-bell"></i> New Alerts</h3>
+                            <div class="notifications-list" id="notifs-list-container"></div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Students View -->
+                <section id="view-students" class="view">
+                    <div class="glass-panel full-height p-24">
+                        <div class="header-action">
+                            <h3>Student Database</h3>
+                            <button class="btn-primary small" id="btn-add-student"><i class="fa-solid fa-plus"></i> Add Student</button>
+                        </div>
+                        <div class="table-container">
+                            <table class="data-table">
+                                <thead><tr><th>Name</th><th>Profile</th><th>Skills</th><th>Actions</th></tr></thead>
+                                <tbody id="students-tbody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Discover (Swipe) View -->
+                <section id="view-discover" class="view">
+                    <div class="swipe-container">
+                        <div class="swipe-stats">
+                            <span id="swipe-counter" class="swipe-counter">0 liked</span>
+                        </div>
+                        <div class="swipe-deck" id="swipe-deck">
+                            <div class="swipe-placeholder glass-panel">
+                                <i class="fa-solid fa-hand-pointer"></i>
+                                <p>Select a user to start swiping</p>
+                            </div>
+                        </div>
+                        <div class="swipe-actions" id="swipe-actions" style="display:none">
+                            <button class="swipe-btn reject" id="btn-swipe-left"><i class="fa-solid fa-xmark"></i></button>
+                            <button class="swipe-btn like" id="btn-swipe-right"><i class="fa-solid fa-heart"></i></button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Career Tools View -->
+                <section id="view-career" class="view">
+                    <div class="career-layout">
+                        <div class="career-sidebar glass-panel">
+                            <h3><i class="fa-solid fa-heart"></i> Liked Opportunities</h3>
+                            <div id="liked-list" class="liked-list"><p class="text-muted">Select a user first.</p></div>
+                        </div>
+                        <div class="career-main glass-panel">
+                            <div class="career-header">
+                                <h3 id="career-opp-title">Select an opportunity</h3>
+                                <div class="career-actions" id="career-actions" style="display:none">
+                                    <button class="btn-primary small" onclick="generateDoc('cv')"><i class="fa-solid fa-file-lines"></i> Generate CV</button>
+                                    <button class="btn-primary small" onclick="generateDoc('cover-letter')"><i class="fa-solid fa-envelope"></i> Cover Letter</button>
+                                    <button class="btn-primary small" onclick="generateDoc('interview-prep')"><i class="fa-solid fa-comments"></i> Interview Prep</button>
+                                </div>
+                            </div>
+                            <div id="career-output" class="career-output">
+                                <p class="text-muted">Like some opportunities in the Discover tab, then come here to generate career documents powered by Gemini AI.</p>
+                            </div>
+                            <div id="career-download" class="career-download hidden">
+                                <button class="btn-secondary" onclick="printDoc()"><i class="fa-solid fa-download"></i> Download as PDF</button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals -->
+    <div id="student-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3 id="student-modal-title">Add Student</h3>
+            <input type="hidden" id="student-id">
+            <div class="form-group"><label>Name</label><input type="text" id="student-name" class="input-glass"></div>
+            <div class="form-group"><label>Profile</label><input type="text" id="student-profile" class="input-glass"></div>
+            <div class="form-group"><label>Interests</label><input type="text" id="student-interests" class="input-glass"></div>
+            <div class="form-group"><label>Skills</label><input type="text" id="student-skills" class="input-glass"></div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btn-close-student">Cancel</button>
+                <button class="btn-primary" id="btn-save-student">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="pipeline-modal" class="modal hidden">
+        <div class="modal-content glass-panel">
+            <h3>Run MAS Pipeline</h3>
+            <p class="text-muted mb-10">Select target sources to scrape and analyze:</p>
+            <div class="checkbox-group">
+                <label><input type="checkbox" class="target-cb" value="internship" checked> Internships</label>
+                <label><input type="checkbox" class="target-cb" value="project" checked> Research Projects</label>
+                <label><input type="checkbox" class="target-cb" value="scholarship" checked> Scholarships</label>
+                <label><input type="checkbox" class="target-cb" value="certification" checked> Certifications</label>
+                <label><input type="checkbox" class="target-cb" value="postdoc" checked> Postdocs</label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-secondary" id="btn-cancel-pipeline">Cancel</button>
+                <button class="btn-primary" id="btn-start-pipeline"><i class="fa-solid fa-play"></i> Execute</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Interactive Simulation Overlay -->
+    <div id="simulation-overlay" class="simulation-overlay hidden">
+        <div class="sim-content glass-panel">
+            <div class="sim-header">
+                <h2><i class="fa-solid fa-microchip fa-spin"></i> MAS Execution in Progress</h2>
+            </div>
+            <div class="sim-animation">
+                <div class="sim-node"><i class="fa-solid fa-globe"></i><br>Web</div>
+                <div class="sim-path"><div class="particle"></div></div>
+                <div class="sim-node active-agent" id="sim-agent"><i class="fa-solid fa-robot"></i><br>Agents</div>
+                <div class="sim-path"><div class="particle delay-1"></div></div>
+                <div class="sim-node"><i class="fa-solid fa-database"></i><br>Database</div>
+                <div class="sim-path"><div class="particle delay-2"></div></div>
+                <div class="sim-node"><i class="fa-solid fa-user-check"></i><br>Users</div>
+            </div>
+            <div class="terminal-box">
+                <div class="terminal-header">sys.stdout > Stream</div>
+                <div id="sim-logs" class="terminal-logs"></div>
+            </div>
+            <div class="sim-footer">
+                <button class="btn-secondary hidden" id="btn-close-sim">Close & Refresh</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
